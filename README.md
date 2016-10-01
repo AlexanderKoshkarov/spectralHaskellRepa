@@ -1,1 +1,1 @@
-Galerkin spectral method with Haskell+Repa
+#Galerkin spectral method with Haskell+Repa
