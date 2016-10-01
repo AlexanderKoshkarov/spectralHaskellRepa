@@ -1,5 +1,7 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -i "gnuplot -persist" -p gnuplot -p ubuntu_font_family
+#
+#Script to plot output
 
 set term x11 font "Ubuntu,18"
 #set terminal x11 enhanced font "Verdana,18"

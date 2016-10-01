@@ -1,1 +1,1 @@
-File for pictures
+Folder for pictures of states

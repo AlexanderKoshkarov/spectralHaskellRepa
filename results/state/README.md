@@ -1,1 +1,1 @@
-File for full states of simulation
+Folder for full states of simulation
