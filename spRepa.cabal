@@ -1,0 +1,33 @@
+name:                spRepa
+version:             0.1.0.0
+synopsis:            Galerkin spectral method with Haskell+Repa
+description:         Please see doc/README.pdf
+homepage:            https://github.com/AlexanderKoshkarov/spectralHaskellRepa
+license:             GPL-3.0
+license-file:        LICENSE
+author:              Oleksandr Koshkarov
+maintainer:          koshmipt@gmail.com
+copyright:           2016 Oleksandr Koshkarov
+category:            Numerical Simulations
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable spRepa
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , repa
+                     , repa-fftw
+                     , repa-io
+                     , transformers
+                     , gnuplot
+                     , directory >= 1.2.5.0
+                     , extra
+
+  Other-Modules: Constants
+               , Solver
+               , Plotter
+               , Utils
+
+  ghc-options:       -O2  -fllvm -threaded -fforce-recomp -rtsopts 

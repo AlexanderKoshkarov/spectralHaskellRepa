@@ -1,0 +1,56 @@
+# resolver: lts-3.5
+# resolver: nightly-2015-09-21
+resolver: ghc-7.10.2
+# resolver: ghcjs-0.1.0_ghc-7.10.2
+# resolver:
+#  name: custom-snapshot
+#  location: "./custom-snapshot.yaml"
+#resolver: lts-6.17
+packages:
+- '.'
+extra-deps:
+- repa-3.4.1.1
+- repa-fftw-3.2.3.2
+- QuickCheck-2.8.2
+- vector-0.11.0.0
+- primitive-0.6.1.0
+- random-1.1
+- tf-random-0.5
+- carray-0.1.6.5
+- fft-0.1.8.4
+- storable-complex-0.2.2
+- ix-shapable-0.1.0
+- syb-0.6
+- repa-io-3.4.1.1
+- bmp-1.2.6.3
+- old-time-1.1.0.3
+- old-locale-1.0.0.7
+
+- gnuplot-0.5.4.1
+- data-accessor-0.2.2.7
+- data-accessor-transformers-0.2.1.7
+- temporary-1.2.0.4
+- utility-ht-0.0.12
+- exceptions-0.8.3
+- mtl-2.2.1
+- stm-2.4.4.1
+- transformers-compat-0.5.1.4
+- directory-1.2.7.0
+- process-1.4.2.0
+- extra-1.5
+- clock-0.7.2
+
+flags: {}
+
+extra-package-dbs: []
+extra-lib-dirs:
+nix:
+    enable: true
+    pure: true
+    packages: 
+    - pkgconfig
+    - fftw
+    - fftwFloat
+    - gnuplot
+    - llvm_35
+
