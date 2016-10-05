@@ -19,17 +19,14 @@
 \begin{abstract}
     This is a short description of Galerkin spectral method which I am using to
     solve a system of partial differential equations with Haskell+Repa.
+    The purpose of this note is to gather feedback of how to proceed with my code.
 \end{abstract}
 
 \section{Notes}
-This section could be skipped.
 \subsection{What is in this text?}
-The system of equations and the method I am using to solve them.
+General notes; the system of equations I am solving; the method I am using to solve them.
 \subsection{What is not in this text?}
 There is no any Haskell or Physics in this text.
-\subsection{Sorry}
-This text is a very raw draft, so please be ready for mistakes, typos,
-inconsistency and other ugliness.
 \subsection{What is the purpose of this text?}
 I am learning Haskell, and I have encountered a problem --- I am stuck.
 All my Haskell experience was about solving toy problems and reading different
@@ -42,7 +39,7 @@ wrote my first Haskell program.
 Right now I need a feedback what to do next.
 So I decided to write this text about mathematical part of my ``first Haskell
 program'' to lure curious and experienced Haskell programmers to look at my code.
-\subsection{Should I have used Haskell?}
+\subsection{Main problem}
 It seems that I need a more advance time stepper then 4th order Runge Kutta
 which I use now. Unfortunately, Haskell does not provide one for Repa to my
 knowladge. So my options are
@@ -63,6 +60,9 @@ Probably, I need to rewrite it to compute convolution explicitly.
 \subsection{About me}
 I am a PhD student in the University of Saskatchewan, Canada. My major is
 theoretical plasma physics. 
+\subsection{Sorry}
+This text is a very raw draft, so please be ready for mistakes, typos,
+inconsistency and other ugliness.
 
 \section{Problem formulation}
 I am trying to solve the system of equations
