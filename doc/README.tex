@@ -7,19 +7,209 @@
 \usepackage{color,xcolor}
 \usepackage{times}
 
+\date{}
+
 \begin{document}
 
 \title{Galerkin spectral method with Haskell}
-\author{Oleksandr Koshkarov}
+\author{Oleksandr Koshkarov\\\small{koshmipt@gmail.com}}
 
 \maketitle
 
 \begin{abstract}
-    notes
+    This is a short description of Galerkin spectral method which I am using to
+    solve a system of partial differential equations with Haskell+Repa.
 \end{abstract}
 
+\section{Notes}
+This section could be skipped.
+\subsection{What is in this text?}
+The system of equations and the method I am using to solve them.
+\subsection{What is not in this text?}
+There is no any Haskell or Physics in this text.
+\subsection{Sorry}
+This text is a very raw draft, so please be ready for mistakes, typos,
+inconsistency and other ugliness.
+\subsection{What is the purpose of this text?}
+I am learning Haskell, and I have encountered a problem --- I am stuck.
+All my Haskell experience was about solving toy problems and reading different
+books/tutorials. As for now, I feel comfortable solving those toy problems, but
+I feel that I cannot make anything significant because I am unfamiliar with
+most of Haskell ecosystem. Thus, I decided I should start writing Haskell code no
+matter what. 
+To do so I picked a research project, which has low time priority for me and
+wrote my first Haskell program.
+Right now I need a feedback what to do next.
+So I decided to write this text about mathematical part of my ``first Haskell
+program'' to lure curious and experienced Haskell programmers to look at my code.
+\subsection{Should I have used Haskell?}
+It seems that I need a more advance time stepper then 4th order Runge Kutta
+which I use now. Unfortunately, Haskell does not provide one for Repa to my
+knowladge. So my options are
+\begin{itemize}
+\item Write my own. I am not seriously considering this as writing advanced
+  time stepper is very difficult problem.
+ \item Use different languages with nice numerical infrastructure. I can
+   probably avoid my usual choice C/Fortran by learning something like Julia or
+   Ocaml which both have SUNDIALS bindings, but I want to give Haskell one more chance.
+ \item Find another Haskell library. Probably that is what I am going to do. The
+   most appealing library seems to be petsc-hs by Marco Zocca (ocramz).
+\end{itemize}
+\subsection{Parallelization}
+The code is written with Repa so one can think it makes it parallel.
+Unfortunately, the most time consuming part of my code is repa's FFT which is
+not parallel, thus if one will use multiple cores, the execution time will increase.
+Probably, I need to rewrite it to compute convolution explicitly.
+\subsection{About me}
+I am a PhD student in the University of Saskatchewan, Canada. My major is
+theoretical plasma physics. 
+
+\section{Problem formulation}
+I am trying to solve the system of equations
+\begin{subequations}
+\begin{align}
+& \partial_t n           = -v_0 \partial_x n  + \theta + n \theta + \nabla n \cdot \nabla \chi \\
+& \partial_t \theta    = -v_0 \partial_x \theta + \eta - n + 0.5\nabla^2 (\nabla \chi)^2 \\
+& \partial_t \eta       = -u_0 \partial_y \theta - \nu (\eta - n) - \rho_s \partial_y \phi + \{ \phi, \eta\} \\
+& \mu \nabla^2 \phi = \eta - n \\
+&  \nabla^2 \chi = \theta  \\
+& \{ \phi , \eta\}  = \partial_x \phi  \partial_y\eta - \partial_y\phi  \partial_x\eta
+\end{align}
+  \label{mainSystem}
+  \end{subequations}
+where $n, \theta, \eta, \phi, \chi$ are two $+$ one dimensional functions $(f =
+f(t,x,y))$, and $\nu, \mu, v_0, u_0, \rho_s$ are constants. \\
+Considered spacial domain is
+\begin{align}
+  & x  \in [0,L_x]  \\
+  & y  \in [0,L_y]
+\end{align}
+Initial conditions are some fixed functions
+\begin{align}
+ &  n(0,x,y) = n_0 (x,y) \\
+ &  \theta(0,x,y) = \theta_0 (x,y) \\
+ &  \eta(0,x,y) = \eta_0 (x,y) \\
+ &  \phi(0,x,y) = \phi_0 (x,y) \\
+ &  \chi(0,x,y) = \chi_0 (x,y) 
+\end{align}
+and boundary conditions are periodic
+\begin{align}
+  & n(t,0,y) = n(t,L_x,y) \\
+  & n(t,x,0) = n(t,x,L_y) \\
+  & \mbox{Same for } \theta, \eta, \phi, \chi
+\end{align}
+
+\section{Spectral method based on Fourier expansion}
+To solve out system (\ref{mainSystem}), we approximate our functions
+\begin{align}
+  & n(t,x,y) \approx \sum_{k_x = -N_{k_x}}^{N_{k_x}} \sum_{k_y = -N_{k_y}}^{N_{k_y}}   \hat{n}_{k_x,k_y}(t) \exp \left ( 2\pi i \left ( \frac{k_x x}{L_x} + \frac{k_y y} {L_y} \right ) \right ) \label{app}
+\end{align}
+same for $\theta,\eta,\chi,\phi$.
+\\ [2mm]
+\textbf{Comment} here we used Fourier expansion. One can use
+different set of expansion functions, thus using ``different'' type of spectral
+method.
+\\ [2mm]
+Now we can plug (\ref{app}) into (\ref{mainSystem}), then multiply by $\exp
+\left (- 2\pi i \left ( \frac{k_x x}{L_x} + \frac{k_y y} {L_y} \right ) \right
+)$ and then integrate over the period $\int_0^{L_x} \int_0^{L_y} (***) dxdy$.
+This will give us the equation for $\hat{n},\hat{\theta}$\dots
+\\ [2mm]
+\textbf{Comment} here we used Fourier functions again, to ``project equation'',
+but we again could have used different functions.
+\\ [2mm]
+I could do what I said, with integration. Then nonlinear terms like $n\theta$
+would be the convolution of two matrices $\hat{n}$ and $\hat{\theta}$.
+The usual way to compute convolution is via fast Fourier transform (FFT), thus I
+will make a little bit different derivation which is simpler but a little bit
+more ugly. 
+\\ [2mm]
+\textbf{Comment} if we would derive with integration (for continuous functions),
+we would need convolution theorem to transform FFT.
+\\ [2mm]
+Let say we know our functions only on the mesh
+\begin{equation}
+  n( m \Delta x, l \Delta y ) = n_{m,l}
+\end{equation}
+where $m = 0,1,\dots,N_x -1 $ and $l = 0,1,\dots,N_y -1$,
+$N_x = 2N_{k_x} + 1$,
+$N_y = 2N_{k_y} + 1$,
+$\Delta x = L_x/N_x$,
+$\Delta y = L_y/N_y$
+. Here and later if I state something general for one
+function (n) it is true for other functions ($\theta,\eta,\dots$).
+I also do not include the last point because it would be the same as first point
+due to periodic boundary conditions.
+\\
+Now we can rewrite equation (\ref{app}) for discrete quantities
+\begin{align}
+  & n_{m,l} = \mathcal{F}^{-1} \left [ \hat{n}_{k_x,k_y} \right ]_{m,l}  = \frac{1}{N_x N_y}  \sum_{k_x = -N_{k_x}}^{N_{k_x}} \sum_{k_y = -N_{k_y}}^{N_{k_y}}   \hat{n}_{k_x,k_y}(t) \exp \left ( 2\pi i \left ( \frac{k_x m}{N_x} + \frac{k_y l} {N_y} \right ) \right ) 
+\end{align}
+here I constructed expansion a little bit differently --- I multiplied it by
+$1/(N_x N_y)$. I also notice that this expansion is actually two dimensional
+reverse FFT. So it has the property
+\begin{equation}
+  \mathcal{F} \circ \mathcal{F}^{-1} =  \mathcal{F}^{-1} \circ \mathcal{F} =\mathbf{1} \label{rev}
+\end{equation}
+where $\circ$ is function composition, $\mathbf{1}$ is identity operator and
+\begin{align}
+  &  \mathcal{F} \left [ n_{m,l} \right ]_{k_x,k_y}  =
+    \sum_{m = 0}^{N_{x} -1} \sum_{l = 0}^{N_{y} - 1}
+    n_{m,l} \exp \left (- 2\pi i \left ( \frac{k_x m}{N_x} + \frac{k_y l} {N_y} \right ) \right ) 
+\end{align}
+Ok, so here is the trick, we cannot plug our discrete transformation into our
+main system (\ref{mainSystem}), so we plug the transformation (\ref{app}),
+differentiate the exponent and only them make it discrete. Then we apply FFT one
+more time and use the (\ref{rev}) property.
+For linear terms it is simple, we just substitute
+\begin{align}
+  & \partial_x \rightarrow i K_x \\
+  & \partial_y \rightarrow i K_y \\
+\end{align}
+where $K_{\alpha} = 2\pi k_\alpha/L_\alpha$ (for $\alpha = x,y$).
+For nonlinear terms, well, we do nothing.
+So we have
+\begin{subequations}
+\begin{align}
+  & \partial_t \hat{n} = -v_0 i K_x  \hat{n}  + \hat{\theta} + NL_1 \\
+& \partial_t \hat{\theta}    = -v_0 i K_x  \hat {\theta} + \hat{\eta} - \hat{ n} + NL_2  \\
+& \partial_t \hat{\eta}       = -u_0 i K_y \hat{\theta} - \nu (\hat{\eta} - \hat{n}) -
+  \rho_s i K_y  \hat{\phi} + NL_3 \\
+& -K^2 \mu  \phi = \eta - n \\
+&  -K^2 \chi = \theta \\ 
+  & K^2 = K_x^2 + K_y^2 \\
+  & NL_1 = 
+    \mathcal{F} \left [    
+\mathcal{F}^{-1} \left [ \hat{n} \right ]  \mathcal{F}^{-1} \left [ \hat{\theta} \right ] 
++
+\mathcal{F}^{-1} \left [iK_x \hat{n} \right ]  \mathcal{F}^{-1} \left [ iK_x \hat{\chi} \right ] 
++
+\mathcal{F}^{-1} \left [ iK_y \hat{n} \right ]  \mathcal{F}^{-1} \left [ iK_y \hat{\chi} \right ] 
+\right ]
+\\
+  & NL_2 = \mbox{similar to \#1} \\
+  & NL_3 = \mbox{similar to \#1} 
+\end{align}
+\label{mainF}
+\end{subequations}
+So now I just solve the system (\ref{mainF}) in time with a time stepper algorithm.
+
+\section {Time integration}
+For time being I am using Runge-Kutta 4. But I need something better. Currently I
+am considering two options: move to different language, use petsc-hs by 
+ Marco Zocca (ocramz).
+
+\section{What else?}
+The report is not finished.
+But hopefully I will improve it, as I go.
+So what I have not covered
+\begin{itemize}
+\item deallising
+\item hyperviscosity
+\item comparison with theory for linear regime
+\end{itemize}
 
 
-\section{Main section}
+ 
 \end{document}
 
